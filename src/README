@@ -1,33 +1,31 @@
-To run the server:
-./RUN.jar (or .sh) -s <positive integer to be uses as the total number of seats in the theater> -p <port to listen on>
 
-Example: ./RUN.jar -s 100  -p 2014
+ReservationService - Main class, it does 2 things
 
-To run the client:
-./RUN.jar (or .sh) -c -t <for tcp>| -u <for udp> -ip <server-ip> -p <server-port>
+1. Starts the TCP & UDP server
+2. Starts the TCP/UDP or both clients, takes imput from the user as command line arguments and sends it to TCP/DatagramClient service
 
-Example: ./RUN.jar -c -u -ip 127.0.0.1 -p 2014  (start the client and connect to the server,
-using the udp protocol, running at the ip address for the localhost and the port 2014).
+server package:
+DatagramServer - Sets up the UDP socket server, Receives the connection forwards the message to BusinessLogic class
+and sends the response from the BusinessLogic back to the client
 
+TCPServer - Sets up the TCP server, Receives the connection forwards the message to BusinessLogic class
+and sends the response from the BusinessLogic back to the client
 
-Commands:
-1. reserve <name> – inputs the name of a person and reserves a seat against this name.
-If the theater does not have enough seats(completely booked), no seat is assigned and
-the command responds with message: ‘Sold out - No seat available’.
-If a reservation has already been made under that name, then the command responds with
-message: ‘Seat already booked against the name provided’.
-Otherwise, a seat is reserved against the name provided and the client is relayed a
-message: ‘Seat assigned to you is <seat-number>’.
+Responder - Unused. Meant for testing
 
-2. bookSeat <name> <seatNum> – behaves similar to reserve command, but imposes an
-additional constraint that a seat is reserved if and only if there is no existing
-reservation against name and the seat having the number seatNum is available. If there
-is no existing reservation but seatNum is not available, the response is:
- ‘<seatNum> is not available’.
+Message - Unused. For future use.
 
-3. search <name> – returns the seat number reserved for name. If no reservation is
-found for name the system re- sponds with a message: ‘No reservation found for <name>’.
+logicfacotries package:
+BusinessLogic - handles the commands (reserve, bookSeat, search & delete )sent by the client 
 
-4. delete <name> – frees up the seat allocated to that person. The command
-returns the seat number that was released. If no existing reservation was found,
-responds with: ‘No reservation found for <name>’.
+client package:
+DatagramClient - Sends the message from the User to the server
+TCPClient - Sends the message from the User to the server
+
+Architecture:
+2 server threads: one for TCP connection and one for UDP connection
+1 client thread per initialization of the class for connecting to either TCP or UDP server depending on the command
+1 BusinessLogic class for parsing the incoming commands to the server and formulating a response for the client
+The goal is to have businesslogic as the critical-section where we honor incoming commands on a queue basis and not overbook 
+the movie theater or reserve the same seat for two different users. This is implemented using 'synchronized' call. However, 
+there are better ways of implementing is, but due to the time crunch, this seemed the simplest.
